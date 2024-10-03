@@ -1,4 +1,5 @@
-# Code Craft Stock Trading Platform
+# StreetSmart Trades New
+Stock Trading Platform
 
 
 ## **Description**
@@ -71,14 +72,12 @@ To Quit Application:
     - If the user chooses **NOT** to purchase another stock, clicking 'No', the program will quit
 
 ## **Credits**
-Angela Darden
+Micaiah Steplight
 
-Darius Davenport
+Liya Taylor
 
-Winter Keemer
+Jericka Guy
 
-Casby Robinson
+Ada Bulgar
 
-Jaden Smith
-
-Fayed Troy
+Isaac Stinnette
