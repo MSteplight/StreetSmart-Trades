@@ -1,5 +1,10 @@
 ''' THIS WILL BE USED WITH EACH STOCK'S OWN BUY AND SELL METHODS'''
 
+import alpaca_trade_api as tradeapi
+import pandas as pd
+import numpy as np
+
+
 import requests, json
 from config import * # config file
 import tkinter as tk
@@ -7,6 +12,16 @@ from tkinter import *
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import time
+
+# import alpaca_trade_api as tradeapi
+
+'''
+import numpy as np
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+'''
+
 
 BASE_URL = 'https://paper-api.alpaca.markets'
 ACCOUNT_URL = '{}/v2/account'.format(BASE_URL)
@@ -32,6 +47,9 @@ METATRADE_PRICE = 'https://data.alpaca.markets/v2/stocks/META/trades/latest?feed
 GOOGTRADE_PRICE = 'https://data.alpaca.markets/v2/stocks/GOOG/trades/latest?feed=iex'
 HEADERS = {'APCA-API-KEY-ID': API_KEY,'APCA-API-SECRET-KEY': SECRET_KEY}
 
+TK_SILENCE_DEPRECATION=1
+
+api = tradeapi.REST(API_KEY, SECRET_KEY, BASE_URL, api_version='v2')
 
 def get_account():
      r = requests.get(ACCOUNT_URL,headers=HEADERS)
@@ -45,12 +63,63 @@ def get_cash():
      #print(f'Your cash amount is: ${cash}')
      return cash
 
+
+def get_alpaca_data(ticker, timeframe='1D', start_date=None, end_date=None, limit=100): # New method to access real time data
+    barset = api.get_bars(ticker, timeframe, start=start_date, end=end_date, limit=limit).df
+    return barset
+
+
+def bollinger_bands(df, window=20, no_of_std=2):
+    df['SMA'] = df['close'].rolling(window=window).mean() # finding the Simple Moving Average
+    df['STD'] = df['close'].rolling(window=window).std() # Calculating Standard deviation
+    df['Upper Band'] = df['SMA'] + (no_of_std * df['STD'])  # Applying SD to upper band to get sell value
+    df['Lower Band'] = df['SMA'] - (no_of_std * df['STD'])  # Applyinng SD to lower band to get buy value
+    return df
+
+
+def bollinger_strategy(df): # Our Trend Trading Strategy 
+    buy_signal = []
+    sell_signal = []
+
+    for i in range(len(df)):
+        if df['close'][i] < df['Lower Band'][i]:  # Buy condition
+            buy_signal.append(df['close'][i])
+            sell_signal.append(np.nan)
+        elif df['close'][i] > df['Upper Band'][i]:  # Sell condition
+            sell_signal.append(df['close'][i])
+            buy_signal.append(np.nan)
+        else:
+            buy_signal.append(np.nan)
+            sell_signal.append(np.nan)
+
+    df['Buy Signal'] = buy_signal
+    df['Sell Signal'] = sell_signal
+    return df
+
+
+# Example usage
+ticker = 'AAPL'
+start_date = '2022-01-01'
+end_date = '2023-01-01'
+timeframe = '1Day'  # You can adjust the timeframe
+
+# Fetch data from Alpaca
+df = get_alpaca_data(ticker, timeframe=timeframe, start_date=start_date, end_date=end_date)
+
+# Calculate Bollinger Bands
+df = bollinger_bands(df)
+
+# Apply the strategy
+df = bollinger_strategy(df)
+
+
 def get_tradePrice(stock):
      r = requests.get(stock, headers=HEADERS)
      response = json.loads(r.content)
      price = response['trade']['p']
 
      return price
+
 
 # Function to create an order
 def create_order(symbol, qty, side, type, time_in_force):
@@ -82,7 +151,7 @@ def is_trading_hours():
 def activate_bot():
     if is_trading_hours():
          # Make purchases of specified stocks
-         buy_stocks()
+        # buy_stocks()
          monitor_stock_pl()
          #schedule_sell_before_market_close()
     else:
@@ -96,10 +165,14 @@ def deactivate_bot():
     else:
         print("Market is closed. Bot is already deactivated.")
 
+
+
+'''
 # Function to buy specified stocks
 def buy_stocks():
     stocks_to_buy = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'META', 'MSFT']
     for stock in stocks_to_buy:
+        #last_trade = api.get_last_trade(stock)
         create_order(symbol=stock, qty=1, side='buy', type='market', time_in_force='day') 
 
 def sell_stocks_if_price_change():
@@ -117,7 +190,7 @@ def sell_stocks_if_price_change():
         elif current_time.tm_hour == 10 and current_time.tm_min == 1:
             create_order(symbol=symbol, qty=order['qty'], side='sell', type='market', time_in_force='day')
         deactivate_bot()
-
+'''
 
 # Function to get the current price of a stock
 def get_current_price(symbol):
@@ -141,9 +214,10 @@ def get_purchase_price(symbol):
     return None  # If no buy order found for the symbol
 
 # Function to schedule selling of stocks 15 minutes before market close
-def schedule_sell_before_market_close():
+'''
+# def schedule_sell_before_market_close():
     while True:
-        # Check if it is 15 minutes before market close
+        Check if it is 15 minutes before market close
         print('Checking Time')
         current_time = time.localtime()
         # 14 52
@@ -152,7 +226,7 @@ def schedule_sell_before_market_close():
             break
         else:
             time.sleep(60)  
-
+'''
 # Function to sell all stocks
 def sell_all_stocks():
     stocks_to_sell = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'META', 'MSFT']
@@ -590,6 +664,7 @@ def profitLoss():
         else:
             break
         time.sleep(60)'''
+
 
 
 
