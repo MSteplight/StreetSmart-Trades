@@ -12,7 +12,7 @@ GOOGTRADE_PRICE = 'https://data.alpaca.markets/v2/stocks/GOOG/trades/latest?feed
 
 # Alpaca API credentials (replace with your keys)
 API_KEY = 'PKANC9WRD0CHUHCWE7SG'
-API_SECRET = 'QptuqJfQFRhpYAkQoZ22S5fQDDj1ReblMXjI7jfg'
+API_SECRET = 'TOUV6DNtDkFoRBtkCti9YmCxDSAhNsnasA0IgxsY'
 BASE_URL = 'https://paper-api.alpaca.markets/v2'  # Paper trading URL
 
 # Initialize Alpaca API
@@ -49,7 +49,7 @@ def bollinger_signal(data):
     elif latest['close'] > latest['Upper']:  # Sell signal (price crosses above upper band)
         return 'sell'
     else:
-        return 'hold'
+        return 'hold. The prices havent reached the lower limit yet'
 
 # Function to place buy/sell orders
 def execute_trade(signal, symbol, qty):
