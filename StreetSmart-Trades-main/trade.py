@@ -1,10 +1,5 @@
 ''' THIS WILL BE USED WITH EACH STOCK'S OWN BUY AND SELL METHODS'''
 
-import alpaca_trade_api as tradeapi
-import pandas as pd
-import numpy as np
-
-
 import requests, json
 from config import * # config file
 import tkinter as tk
@@ -12,16 +7,6 @@ from tkinter import *
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import time
-
-# import alpaca_trade_api as tradeapi
-
-'''
-import numpy as np
-import pandas as pd
-import yfinance as yf
-import matplotlib.pyplot as plt
-'''
-
 
 BASE_URL = 'https://paper-api.alpaca.markets'
 ACCOUNT_URL = '{}/v2/account'.format(BASE_URL)
@@ -47,10 +32,6 @@ METATRADE_PRICE = 'https://data.alpaca.markets/v2/stocks/META/trades/latest?feed
 GOOGTRADE_PRICE = 'https://data.alpaca.markets/v2/stocks/GOOG/trades/latest?feed=iex'
 HEADERS = {'APCA-API-KEY-ID': API_KEY,'APCA-API-SECRET-KEY': SECRET_KEY}
 
-TK_SILENCE_DEPRECATION=1
-
-api = tradeapi.REST(API_KEY, SECRET_KEY, BASE_URL, api_version='v2')
-
 def get_account():
      r = requests.get(ACCOUNT_URL,headers=HEADERS)
      return json.loads(r.content)
@@ -63,71 +44,12 @@ def get_cash():
      #print(f'Your cash amount is: ${cash}')
      return cash
 
-
-def get_alpaca_data(ticker, timeframe='1D', start_date=None, end_date=None, limit=100): # New method to access real time data
-    barset = api.get_bars(ticker, timeframe, start=start_date, end=end_date, limit=limit).df
-    return barset
-
-
-def bollinger_bands(df, window=20, no_of_std=2):
-    df['SMA'] = df['close'].rolling(window=window).mean() # finding the Simple Moving Average
-    df['STD'] = df['close'].rolling(window=window).std() # Calculating Standard deviation
-    df['Upper Band'] = df['SMA'] + (no_of_std * df['STD'])  # Applying SD to upper band to get sell value
-    df['Lower Band'] = df['SMA'] - (no_of_std * df['STD'])  # Applyinng SD to lower band to get buy value
-    return df
-
-
-def bollinger_strategy(df): # Our Trend Trading Strategy 
-    buy_signal = []
-    sell_signal = []
-
-    for i in range(len(df)):
-        '''
-        if df['close'].iloc[i] < df['Lower Band'].iloc[i]:  # Buy condition
-            buy_signal.append(df['close'].iloc[i])
-            sell_signal.append(np.nan)
-        elif df['close'].iloc[i] > df['Upper Band'].iloc[i]:  # Sell condition
-            sell_signal.append(df['close'].iloc[i])
-            buy_signal.append(np.nan)
-        '''
-        if df['close'][i] < df['Lower Band'][i]:  # Buy condition
-            buy_signal.append(df['close'][i])
-            sell_signal.append(np.nan)
-        elif df['close'][i] > df['Upper Band'][i]:  # Sell condition
-            sell_signal.append(df['close'][i])
-            buy_signal.append(np.nan)
-        else:
-            buy_signal.append(np.nan)
-            sell_signal.append(np.nan)
-
-    df['Buy Signal'] = buy_signal
-    df['Sell Signal'] = sell_signal
-    return df
-
-
-# Example usage
-ticker = 'AAPL'
-start_date = '2022-01-01'
-end_date = '2023-01-01'
-timeframe = '1Day'  # You can adjust the timeframe
-
-# Fetch data from Alpaca
-df = get_alpaca_data(ticker, timeframe=timeframe, start_date=start_date, end_date=end_date)
-
-# Calculate Bollinger Bands
-df = bollinger_bands(df)
-
-# Apply the strategy
-df = bollinger_strategy(df)
-
-
 def get_tradePrice(stock):
      r = requests.get(stock, headers=HEADERS)
      response = json.loads(r.content)
      price = response['trade']['p']
 
      return price
-
 
 # Function to create an order
 def create_order(symbol, qty, side, type, time_in_force):
@@ -159,7 +81,7 @@ def is_trading_hours():
 def activate_bot():
     if is_trading_hours():
          # Make purchases of specified stocks
-        # buy_stocks()
+         buy_stocks()
          monitor_stock_pl()
          #schedule_sell_before_market_close()
     else:
@@ -173,14 +95,10 @@ def deactivate_bot():
     else:
         print("Market is closed. Bot is already deactivated.")
 
-
-
-'''
 # Function to buy specified stocks
 def buy_stocks():
     stocks_to_buy = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'META', 'MSFT']
     for stock in stocks_to_buy:
-        #last_trade = api.get_last_trade(stock)
         create_order(symbol=stock, qty=1, side='buy', type='market', time_in_force='day') 
 
 def sell_stocks_if_price_change():
@@ -198,7 +116,7 @@ def sell_stocks_if_price_change():
         elif current_time.tm_hour == 10 and current_time.tm_min == 1:
             create_order(symbol=symbol, qty=order['qty'], side='sell', type='market', time_in_force='day')
         deactivate_bot()
-'''
+
 
 # Function to get the current price of a stock
 def get_current_price(symbol):
@@ -222,10 +140,9 @@ def get_purchase_price(symbol):
     return None  # If no buy order found for the symbol
 
 # Function to schedule selling of stocks 15 minutes before market close
-'''
-# def schedule_sell_before_market_close():
+def schedule_sell_before_market_close():
     while True:
-        Check if it is 15 minutes before market close
+        # Check if it is 15 minutes before market close
         print('Checking Time')
         current_time = time.localtime()
         # 14 52
@@ -234,7 +151,7 @@ def get_purchase_price(symbol):
             break
         else:
             time.sleep(60)  
-'''
+
 # Function to sell all stocks
 def sell_all_stocks():
     stocks_to_sell = ['AAPL', 'TSLA', 'AMZN', 'GOOG', 'META', 'MSFT']
@@ -338,16 +255,6 @@ def mainWindow():
      orderingGUI()
      #orderingGUI()
      get_cash()
-
-def range_trading():
-    # Logic for Range Trading mode
-    print("Range Trading button clicked")
-    # Add more logic here as needed
-
-def original_trading():
-    # Logic for Original mode
-    print("Original button clicked")
-    # Add more logic here as needed
      
 def orderingGUI():
     global root
@@ -355,11 +262,11 @@ def orderingGUI():
      #root.state('zoomed')
      #root.attributes('-fullscreen', True)
     root.geometry('{}x{}'.format(root.winfo_screenwidth(), root.winfo_screenheight()))
-    root.title('Code Craft - Ordering Stocks')
+    root.title('StreetSmart Trades - Ordering Stocks')
     #root.state('zoomed')
     global entry1, spin, v, j, k
+    
 
-    # Empty spaces for formatting
     empty = tk.Label(root, text=' \n   ', width=10)
     empty.grid(column=1, row=0)
     empty = tk.Label(root, text=' \n   ', width=10)
@@ -374,57 +281,52 @@ def orderingGUI():
     empty = tk.Label(root, text=' \n   ', width=10)
     empty.grid(column=5, row=0)
 
-    empty = tk.Label(root, text=' \n   ', width=10)
-    empty.grid(column=6, row=0)
-
     # Display the user's cash amount
     cash = get_cash()
     cashAmount = tk.Label(root, text=f'You currently have: ${cash}', font=('TkDefaultFont', 18, 'bold'))
     cashAmount.grid(column=6, row=3)
 
-    genmess = tk.Label(root, text='Currently buying one share at market price using: day time in force ', font=('TkDefaultFont', 18, 'bold'))
+    
+    genmess = tk.Label(root, text='Currently buying one share at market price using: day time in force ',font=('TkDefaultFont', 18, 'bold'))
     genmess.grid(column=6, row=4)
 
     empty = tk.Label(root, text=' \n   ', width=10)
     empty.grid(column=6, row=5)
 
-
-    # Column headers for stock symbol and current stock price
-    headers = tk.Label(root, text='Stock Symbol | Current Stock Price', font=('TkDefaultFont', 18, 'bold'))
-    headers.grid(column=6, row=7)
+    empty = tk.Label(root, text=' \n   ', width=10)
+    empty.grid(column=6, row=6)
 
     # AAPL
     AAPLprice = get_tradePrice(AAPLTRADE_PRICE)
-    aaplLabel = tk.Label(root, text=f'AAPL | ${AAPLprice}', font=('TkDefaultFont', 18, 'bold'))
-    aaplLabel.grid(column=6, row=8)
-    print(f"AAPL price: {AAPLprice}") 
+    buymess = tk.Label(root, text=f'AAPL at ${(AAPLprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=7)
 
     # MSFT
     MSFTprice = get_tradePrice(MSFTTRADE_PRICE)
-    msftLabel = tk.Label(root, text=f'MSFT | ${MSFTprice}', font=('TkDefaultFont', 18, 'bold'))
-    msftLabel.grid(column=6, row=9)
+    buymess = tk.Label(root, text=f'MSFT at ${(MSFTprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=8)
     
     # META
     METAprice = get_tradePrice(METATRADE_PRICE)
-    metaLabel = tk.Label(root, text=f'META | ${METAprice}', font=('TkDefaultFont', 18, 'bold'))
-    metaLabel.grid(column=6, row=10)
+    buymess = tk.Label(root, text=f'META at ${(METAprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=9)
 
     # TSLA
     TSLAprice = get_tradePrice(TSLATRADE_PRICE)
-    tslaLabel = tk.Label(root, text=f'TSLA | ${TSLAprice}', font=('TkDefaultFont', 18, 'bold'))
-    tslaLabel.grid(column=6, row=11)
+    buymess = tk.Label(root, text=f'TSLA at ${(TSLAprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=10)
 
     # AMZN
     AMZNprice = get_tradePrice(AMZNTRADE_PRICE)
-    amznLabel = tk.Label(root, text=f'AMZN | ${AMZNprice}', font=('TkDefaultFont', 18, 'bold'))
-    amznLabel.grid(column=6, row=12)
+    buymess = tk.Label(root, text=f'AMZN at ${(AMZNprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=11)
 
     # GOOG
     GOOGprice = get_tradePrice(GOOGTRADE_PRICE)
-    googLabel = tk.Label(root, text=f'GOOG | ${GOOGprice}', font=('TkDefaultFont', 18, 'bold'))
-    googLabel.grid(column=6, row=13)
+    buymess = tk.Label(root, text=f'GOOG at ${(GOOGprice)}',font=('TkDefaultFont', 18, 'bold'))
+    buymess.grid(column=6, row=12)
 
-    # Automatic update to another screen
+     #root.pack(side=RIGHT, fill='none', expand=True)
     root.after(10000, congratScreen)
      
 
@@ -503,7 +405,7 @@ def welcomeScr():
     btn_deactivate.pack(pady=40)
 
 
-    welcome.title('Code Craft - Order Table')
+    welcome.title('Trend Trading Bot')
     welcome.geometry('{}x{}'.format(welcome.winfo_screenwidth(), welcome.winfo_screenheight()))
 
     # Table to list orders
@@ -536,13 +438,6 @@ welcome.title('Code Craft - Alpaca Trading API')
 welcome.state('zoomed')
 image = Image.open('CodeCraftLogo.png')
 image = ImageTk.PhotoImage(image)
-# Create and place the Range Trading button
-range_button = tk.Button(welcome, text="Range Trading", command=range_trading, font=("Helvetica", 12), width=15)
-range_button.pack(pady=10)
-
-# Create and place the Original Trading button
-original_button = tk.Button(welcome, text="Original", command=original_trading, font=("Helvetica", 12), width=15)
-original_button.pack(pady=10)
 
 top = Frame(welcome)
 top.pack(side=TOP)
@@ -595,104 +490,3 @@ profitLoss()
 
 welcome.mainloop()
 #root.mainloop()
-
-
-
-
-'''
-def price_increased(current_price, previous_price):
-    return current_price > previous_price
-
-def price_decreased(current_price, previous_price):
-    return current_price < previous_price
-
-previous_price = {}
-'''
-
-'''
-# Function to sell all stocks
-def sell_all_stocks():
-    orders = get_orders()
-    current_time = time.localtime()
-    for order in orders:
-        symbol = order['symbol']
-        price = order['price']
-        if symbol not in previous_price:
-            previous_price[symbol] = price
-            continue
-
-        price_change = (price - previous_price[symbol]) / previous_price[symbol] * 100
-        if price_change >= 1:
-            create_order(symbol=order['symbol'], qty=order['qty'], side='sell', type='market', time_in_force='day')
-            previous_price[symbol] = price
-        elif price_change <= -1:
-            create_order(symbol=order['symbol'], qty=order['qty'], side='sell', type='market', time_in_force='day')
-            previous_price[symbol] = price
-        elif current_time.tm_hour == 15  and current_time.tm_min == 55:
-            create_order(symbol=order['symbol'], qty=order['qty'], side='sell', type='market', time_in_force='day')
-        deactivate_bot()
-'''
-'''
-def profitLoss():
-    r = requests.get(POSITIONS_URL, headers=HEADERS)
-    response = json.loads(r.content)
-    stocks = ['AAPL', 'TSLA', 'AMZN', 'GOOGL', 'META', 'MSFT']
-    # unrealized_plpc
-    for stock in stocks:
-        if response['symbol'] == stock:
-            print(response['unrealized_plpc'])
-            return response['unrealized_plpc']
-'''
-
-
-
-
-# DOESNT WORK YET
-# Function to monitor stock prices and adjust strategies
-'''def monitor_stock_pl():
-    while True:
-        if is_trading_hours():
-            print('Monitor stock pl method')
-            # Implement your monitoring and strategy adjustment logic here
-            # put the price that it was bought at and check the price that it is at now
-            # calculate the percentage
-            stocks = ['AAPL', 'TSLA', 'AMZN', 'GOOGL', 'META', 'MSFT']
-            for stock in stocks:
-                if profitLoss() > 0:
-                    print('Greater than 0')
-
-                else:
-                    print('Less than 0')
-
-
-        else:
-            break'''
-
-'''def monitor_stock_prices():
-    while True:
-        if is_trading_hours():
-            # Implement your monitoring and strategy adjustment logic here
-            # put the price that it was bought at and check the price that it is at now
-            # calculate the percentage
-            stocks = ['AAPL', 'TSLA', 'AMZN', 'GOOGL', 'META', 'MSFT']
-            for stock in stocks:
-                # 159.75
-                tradedPrice = get_tradePrice(stock)
-                time.sleep(60)
-                #159.74
-                currentPrice = get_tradePrice(stock)
-
-                priceChange = currentPrice - tradedPrice
-
-                if profitLoss > 0:
-                    print('Greater than 0')
-
-                else:
-                    print('Less than 0')
-
-
-        else:
-            break
-        time.sleep(60)'''
-
-
